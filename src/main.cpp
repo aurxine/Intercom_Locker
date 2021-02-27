@@ -2,12 +2,12 @@
 #include<Servo.h>
 
 Servo locker; // this servo locks the hook of the key holder
-#define Servo_Pin 9
+#define Servo_Pin 10
 #define Initial_Position 90
 #define Lock_Angle 90
 #define Unlock_Angle 0
 
-#define LDR_Pin A0
+#define LDR_Pin A2
 float LDR_Threshold = 500;
 
 #define Unlock_Pin 2
