@@ -3,14 +3,16 @@
 
 Servo locker; // this servo locks the hook of the key holder
 #define Servo_Pin 10
-#define Initial_Position 90
+#define Initial_Position 0
 #define Lock_Angle 90
 #define Unlock_Angle 0
 
-#define LDR_Pin A2
-float LDR_Threshold = 500;
+#define bounce_time 200
 
-#define Unlock_Pin 2
+#define Button_Pin A2
+float Button_Threshold = 1020;
+
+#define Unlock_Pin 3
 bool isLocked = true;
 
 void Turn_Angle(Servo &servo, int angle)
@@ -18,9 +20,9 @@ void Turn_Angle(Servo &servo, int angle)
   int current_angle = servo.read();
   int difference_of_angles = angle - current_angle;
 
-  for(int i = 0; i < abs(difference_of_angles); i++)
+  for(int i = 0; i < abs(difference_of_angles); i += 5)
   {
-    current_angle += difference_of_angles / abs(difference_of_angles);
+    current_angle += 5*difference_of_angles / abs(difference_of_angles);
     Serial.print("Current angle: ");
     Serial.println(current_angle);
     servo.write(current_angle);
@@ -30,57 +32,53 @@ void Turn_Angle(Servo &servo, int angle)
 
 void Unlock()
 {
-  isLocked = false;
+  static unsigned long last_interrupt_time = 0;
+    unsigned long interrupt_time = millis();
+    // Serial.println("interrupt activated");
+    if(interrupt_time - last_interrupt_time > bounce_time)
+    {
+        Serial.println("Unlocking Command Given");
+        isLocked = false;
+    }
+
+    last_interrupt_time = interrupt_time;
+
 }
 
 void setup() 
 {
   Serial.begin(9600);
-  // pinMode(8, OUTPUT);
-  // pinMode(7, OUTPUT);
-  // digitalWrite(8, HIGH);
-  // digitalWrite(7, LOW);
   pinMode(Unlock_Pin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(Unlock_Pin), Unlock, FALLING);
 
   locker.attach(Servo_Pin);
 
+  delay(2000);
   locker.write(Initial_Position);
 
-  // delay(2000);
-
-  // locker.write(30);
-
-  // delay(2000);
-
-  // Turn_Angle(locker, 50);
-
-  // delay(1000);
-
-  // Turn_Angle(locker, 100);
-
-  // delay(1000);
-
-  // Turn_Angle(locker, 30);
-
-  
 }
 
 void loop() 
 {
+
   if(!isLocked)
   {
+    Serial.println("Unlocking");
     Turn_Angle(locker, Unlock_Angle);
   } 
 
-  if(analogRead(LDR_Pin) > LDR_Threshold)
+  Serial.println(analogRead(Button_Pin));
+  
+  if(analogRead(Button_Pin) >= Button_Threshold)
   {
+    Serial.println("Locking");
     Turn_Angle(locker, Lock_Angle);
     isLocked = true;
   }
+  delay(500);
 
-  else
-  {
-    isLocked = false;
-  }
+  // else
+  // {
+  //   isLocked = false;
+  // }
 }
